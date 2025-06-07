@@ -1,0 +1,61 @@
+# 水平分库分表示例
+spring:
+  shardingsphere:
+    datasource:
+      names: ds1,ds2
+      ds1:  # 第一个数据源
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://192.168.64.14:3307/sj-database-sharding-1?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: root
+
+      ds2: # 第二个数据源
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://192.168.64.14:3307/sj-database-sharding-2?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: root
+
+    rules:
+      sharding:
+        sharding-algorithms:
+          database-inline:
+            type: INLINE
+            props:
+              algorithm-expression: ds$->{user_id % 3}
+          table-inline:
+            type: INLINE
+            props:
+              algorithm-expression: course_$->{cid % 2 + 1}
+
+        tables:
+          course:
+            actual-data-nodes: ds$->{1..2}.course_$->{1..2}   # 实际数据节点（格式：数据源.表名）
+
+            database-strategy: # 分库策略（基于user_id）
+              standard:
+                sharding-column: user_id
+                sharding-algorithm-name: database-inline
+
+            table-strategy:  # 分表策略（基于cid）
+              standard:
+                sharding-column: cid
+                sharding-algorithm-name: table-inline
+            key-generate-strategy:   # 主键生成配置
+              standard:
+                column: cid  # 主键列名
+                key-generator-name: snowflake  # 使用雪花算法
+
+        key-generators:  # 主键生成器配置（雪花算法）
+          snowflake:
+            type: SNOWFLAKE
+
+    props:
+      sql-show: true  # 显示sql日志
+
+  main:
+    allow-bean-definition-overriding: true  # 一个实体类对应两张表，覆盖
+
+
+

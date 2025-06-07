@@ -1,0 +1,43 @@
+spring:
+  shardingsphere:
+    datasource:
+      names: ds1
+      ds1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://192.168.64.14:3307/sdj-vertical-partitioning?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: root
+    rules:
+      sharding:
+        sharding-algorithms:
+          vertical-table:
+            type: INLINE
+            props:
+              algorithm-expression: user_$->{table_type}
+
+        tables:
+          t_user:
+            actual-data-nodes: ds1.user_base,ds1.user_profile
+
+            table-strategy:
+              standard:
+                sharding-column: table_type
+                sharding-algorithm-name: vertical-table
+            key-generate-strategy:
+              column: id
+              key-generator-name: snowflake
+
+        key-generators:
+          snowflake:
+            type: SNOWFLAKE
+    props:
+      sql-show: true
+  main:
+    allow-bean-definition-overriding: true
+
+
+
+
+
+

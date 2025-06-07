@@ -1,0 +1,47 @@
+spring:
+  shardingsphere:
+    datasource:
+      names: ds1,ds2
+      ds1:  # 第一个数据源
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://192.168.64.14:3307/sdj-vertical-sharding-1?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: root
+
+      ds2:  # 第二个数据源
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://192.168.64.14:3307/sdj-vertical-sharding-2?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: root
+
+    rules:
+      sharding:
+        tables:
+          user:
+            actual-data-nodes: ds1.user  # 指定数据节点
+            key-generate-strategy: # 主键生成策略
+              column: user_id
+              key-generator-name: snowflake
+
+          course:
+            actual-data-nodes: ds2.course  # 指定数据节点
+            key-generate-strategy:  # 主键生成策略
+              column: cid
+              key-generator-name: snowflake
+
+        key-generators:
+          snowflake:
+            type: SNOWFLAKE  # 使用内置雪花算法
+    props:
+      sql-show: true  # 打印SQL日志（调试用）
+  main:
+    allow-bean-definition-overriding: true
+
+
+
+
+
+
+
